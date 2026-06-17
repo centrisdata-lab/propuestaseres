@@ -1,0 +1,504 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  :root {
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #085041;
+    --amber: #E8A93C;
+    --amber-dark: #BA7517;
+    --amber-light: #FAEEDA;
+    --red: #E05B49;
+    --red-light: #FBEAE8;
+    --text: #2C2C2A;
+    --text-muted: #5F5E5A;
+    --white: #ffffff;
+    --border: rgba(0,0,0,0.08);
+  }
+  body { background: transparent; }
+  #app { max-width: 680px; margin: 0 auto; position: relative; }
+
+  /* DEMO BADGE + CONTROLS */
+  .demo-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; margin: 0.3rem 0.5rem 0; }
+  .demo-badge { display: flex; align-items: center; gap: 6px; background: var(--red); color: white; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; letter-spacing: 0.05em; }
+  .demo-badge .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: white; animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .demo-controls { display: flex; gap: 8px; }
+  .demo-btn { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.15s; font-weight: 500; }
+  .demo-btn:hover { border-color: var(--green); color: var(--green); }
+  .demo-btn i { font-size: 14px; }
+
+  /* CURSOR */
+  .demo-cursor { position: absolute; width: 26px; height: 26px; pointer-events: none; z-index: 100; transition: left 0.7s cubic-bezier(0.45,0,0.25,1), top 0.7s cubic-bezier(0.45,0,0.25,1); opacity: 0; }
+  .demo-cursor.visible { opacity: 1; }
+  .demo-cursor svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3)); }
+  .demo-cursor.clicking { transform: scale(0.8); }
+  .click-ripple { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: rgba(29,158,117,0.3); pointer-events: none; z-index: 99; transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  .click-ripple.animate { animation: ripple 0.6s ease-out; }
+  @keyframes ripple { 0% { transform: translate(-50%,-50%) scale(0); opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(1.8); opacity: 0; } }
+
+  .progress-wrap { padding: 0.4rem 1.5rem 0; }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .progress-text { font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+  .points-badge { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); color: white; font-size: 12px; padding: 5px 12px; border-radius: 20px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+  .points-badge i { font-size: 13px; }
+  .progress-bar { width: 100%; height: 5px; background: #eee; border-radius: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--amber)); border-radius: 5px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+  .screen { display: none; flex-direction: column; align-items: center; padding: 1.3rem 1.5rem 1.8rem; min-height: 500px; border-radius: 18px; margin: 0.5rem; }
+  .screen.active { display: flex; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-header { width: 100%; max-width: 470px; margin-bottom: 1.1rem; text-align: center; }
+  .step-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: inline-block; padding: 4px 12px; border-radius: 20px; }
+  .step-eyebrow.green { color: var(--green-dark); background: var(--green-light); }
+  .step-eyebrow.red { color: var(--red); background: var(--red-light); }
+
+  .btn-primary { background: linear-gradient(135deg, var(--green), var(--green-dark)); color: white; border: none; padding: 14px 34px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 4px 16px rgba(29,158,117,0.3); }
+  .btn-primary i { font-size: 16px; }
+
+  /* WELCOME */
+  #screen-1 { background: linear-gradient(160deg, var(--green-dark) 0%, #0a3d33 100%); justify-content: center; position: relative; overflow: hidden; }
+  #screen-1::before { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(93,202,165,0.15), transparent 70%); border-radius: 50%; }
+  .welcome-emoji { font-size: 60px; margin-bottom: 1rem; animation: bounce 2.5s ease-in-out infinite; z-index: 2; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .welcome-tag { font-size: 11px; color: #5DCAA5; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.7rem; z-index: 2; }
+  .welcome-title { font-size: 27px; font-weight: 700; color: white; text-align: center; line-height: 1.25; max-width: 420px; margin-bottom: 0.8rem; z-index: 2; }
+  .welcome-sub { font-size: 14px; color: #B8E6D5; text-align: center; max-width: 360px; line-height: 1.6; margin-bottom: 1.4rem; z-index: 2; }
+  .game-pills { display: flex; gap: 8px; margin-bottom: 1.6rem; flex-wrap: wrap; justify-content: center; z-index: 2; }
+  .game-pill { background: rgba(255,255,255,0.1); border: 1px solid rgba(93,202,165,0.3); border-radius: 20px; padding: 7px 14px; font-size: 12px; color: #B8E6D5; display: flex; align-items: center; gap: 6px; }
+
+  /* TRIVIA */
+  #screen-2 { background: linear-gradient(160deg, #fff 0%, var(--red-light) 100%); }
+  .scenario-card { background: white; border-radius: 18px; padding: 1.4rem; width: 100%; max-width: 470px; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(224,91,73,0.12); }
+  .scenario-emoji { font-size: 42px; text-align: center; margin-bottom: 10px; display: block; }
+  .scenario-num { font-size: 11px; color: var(--red); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; text-align: center; }
+  .scenario-text { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.5; text-align: center; }
+  .answers { display: flex; flex-direction: column; gap: 9px; width: 100%; max-width: 470px; margin-bottom: 1rem; }
+  .answer-btn { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 13px 18px; font-size: 14px; color: var(--text); text-align: left; transition: all 0.18s; display: flex; align-items: center; gap: 12px; }
+  .answer-emoji { font-size: 22px; flex-shrink: 0; }
+  .answer-btn.correct { background: var(--green-light); border-color: var(--green); color: var(--green-dark); font-weight: 600; }
+  .answer-btn.wrong { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .feedback-box { width: 100%; max-width: 470px; padding: 14px 16px; border-radius: 14px; font-size: 13px; line-height: 1.55; display: none; align-items: flex-start; gap: 10px; }
+  .feedback-box.show { display: flex; animation: fadeUp 0.4s ease; }
+  .feedback-box.correct { background: var(--green-light); color: var(--green-dark); }
+  .feedback-emoji { font-size: 22px; flex-shrink: 0; }
+  .feedback-box strong { display: block; margin-bottom: 3px; font-size: 14px; }
+
+  /* MEMORY */
+  #screen-3 { background: linear-gradient(160deg, #fff 0%, var(--green-light) 100%); }
+  .memo-instruction { background: white; border-radius: 14px; padding: 13px 16px; font-size: 13px; color: var(--text); line-height: 1.5; max-width: 470px; width: 100%; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 12px rgba(29,158,117,0.1); }
+  .memo-instruction .emoji { font-size: 24px; }
+  .memo-instruction strong { color: var(--green-dark); }
+  .memo-stats { display: flex; gap: 14px; margin-bottom: 1rem; font-size: 12px; color: var(--text-muted); }
+  .memo-stat { display: flex; align-items: center; gap: 5px; background: white; padding: 6px 12px; border-radius: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .memo-stat strong { color: var(--green-dark); font-weight: 700; }
+  .memo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; width: 100%; max-width: 400px; margin-bottom: 0.8rem; }
+  .memo-card { aspect-ratio: 1; border-radius: 14px; background: linear-gradient(145deg, var(--green-dark), #0a4a3d); display: flex; align-items: center; justify-content: center; transition: all 0.25s; box-shadow: 0 3px 10px rgba(8,80,65,0.2); }
+  .memo-card.flipped { background: white; border: 2px solid var(--green); }
+  .memo-card.matched { background: linear-gradient(145deg, var(--green-light), #d0efE5); border: 2px solid var(--green); animation: matchPop 0.5s ease; }
+  @keyframes matchPop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  .memo-front, .memo-back { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; gap: 3px; }
+  .memo-front .emoji { font-size: 24px; opacity: 0.45; }
+  .memo-back { display: none; }
+  .memo-card.flipped .memo-front, .memo-card.matched .memo-front { display: none; }
+  .memo-card.flipped .memo-back, .memo-card.matched .memo-back { display: flex; }
+  .memo-back .emoji { font-size: 26px; }
+  .memo-back span { font-size: 8.5px; color: var(--text-muted); font-weight: 600; text-align: center; line-height: 1.15; }
+  .match-toast { background: var(--green-dark); color: white; padding: 10px 18px; border-radius: 50px; font-size: 13px; font-weight: 500; max-width: 440px; text-align: center; opacity: 0; transition: opacity 0.3s; line-height: 1.4; min-height: 0; }
+  .match-toast.show { opacity: 1; }
+
+  /* IMPACT */
+  #screen-4 { background: linear-gradient(160deg, #fff 0%, var(--amber-light) 100%); justify-content: center; }
+  .impact-emoji { font-size: 54px; margin-bottom: 0.5rem; animation: bounce 2.5s ease-in-out infinite; }
+  .impact-num { font-size: 70px; font-weight: 800; background: linear-gradient(135deg, var(--amber), var(--amber-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; letter-spacing: -3px; margin-bottom: 8px; }
+  .impact-headline { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; text-align: center; }
+  .impact-context { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 380px; text-align: center; margin-bottom: 1.3rem; }
+  .curiosity-card { background: white; border-radius: 16px; padding: 1.2rem; width: 100%; max-width: 440px; margin-bottom: 1.3rem; box-shadow: 0 4px 18px rgba(186,117,23,0.12); text-align: center; }
+  .curiosity-card .emoji { font-size: 28px; margin-bottom: 8px; }
+  .curiosity-text { font-size: 15px; color: var(--text); line-height: 1.5; font-weight: 500; }
+  .curiosity-text strong { color: var(--green-dark); }
+
+  /* REGISTER */
+  #screen-5 { background: linear-gradient(160deg, #fff 0%, var(--green-light) 100%); }
+  .register-emoji { font-size: 50px; margin-bottom: 0.8rem; }
+  .register-title { font-size: 22px; font-weight: 700; color: var(--text); text-align: center; margin-bottom: 6px; }
+  .register-sub { font-size: 14px; color: var(--text-muted); text-align: center; max-width: 380px; line-height: 1.5; margin-bottom: 1rem; }
+  .prize-banner { background: linear-gradient(135deg, var(--amber-light), #fff5e0); border: 1px solid rgba(232,169,60,0.3); border-radius: 14px; padding: 13px 16px; width: 100%; max-width: 380px; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; }
+  .prize-banner .emoji { font-size: 26px; flex-shrink: 0; }
+  .prize-banner p { font-size: 12px; color: #633806; line-height: 1.5; }
+  .form-group { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 11px; }
+  .form-group label { font-size: 13px; color: var(--text); font-weight: 600; }
+  .form-group input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--text); outline: none; }
+  .form-group input.typing { border-color: var(--green); }
+
+  /* THANKS */
+  #screen-thanks { background: linear-gradient(160deg, var(--green-dark) 0%, #0a3d33 100%); justify-content: center; }
+  .thanks-emoji { font-size: 60px; margin-bottom: 1rem; animation: matchPop 0.7s ease; }
+  .thanks-title { font-size: 24px; font-weight: 700; color: white; text-align: center; margin-bottom: 8px; }
+  .thanks-sub { font-size: 14px; color: #B8E6D5; text-align: center; max-width: 360px; line-height: 1.6; margin-bottom: 1.3rem; }
+  .final-score { background: rgba(255,255,255,0.1); border: 1px solid rgba(93,202,165,0.3); border-radius: 14px; padding: 1rem 1.6rem; margin-bottom: 1.3rem; display: flex; align-items: center; gap: 14px; }
+  .final-score .emoji { font-size: 30px; }
+  .final-score-num { font-size: 26px; font-weight: 700; color: white; }
+  .final-score-label { font-size: 11px; color: #5DCAA5; text-transform: uppercase; letter-spacing: 0.08em; }
+  .replay-hint { font-size: 12px; color: #5DCAA5; display: flex; align-items: center; gap: 6px; }
+</style>
+
+<div id="app">
+  <h2 class="sr-only">Demo automático AviPro — reproducción tipo video para Grupo Seres</h2>
+
+  <div class="demo-bar">
+    <span class="demo-badge"><span class="rec-dot"></span> DEMO</span>
+    <div class="demo-controls">
+      <button class="demo-btn" id="pause-btn" onclick="togglePause()"><i class="ti ti-player-pause"></i> Pausar</button>
+      <button class="demo-btn" onclick="restartDemo()"><i class="ti ti-refresh"></i> Reiniciar</button>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-row">
+      <span class="progress-text" id="progress-label">Bienvenida</span>
+      <span class="points-badge"><i class="ti ti-bolt"></i> <span id="points">0</span> pts</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:14%"></div></div>
+  </div>
+
+  <div class="demo-cursor" id="cursor">
+    <svg viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="1"><path d="M4 2 L4 18 L8 14 L11 21 L14 20 L11 13 L17 13 Z"/></svg>
+  </div>
+  <div class="click-ripple" id="ripple"></div>
+
+  <!-- STEP 1 -->
+  <div class="screen active" id="screen-1">
+    <span class="welcome-emoji">🐔</span>
+    <p class="welcome-tag">AviPro · Soluciones Avícolas</p>
+    <h1 class="welcome-title">Tus aves te están diciendo algo. ¿Sabes escucharlas?</h1>
+    <p class="welcome-sub">Un recorrido donde juegas, descubres y entiendes qué hace que una granja prospere.</p>
+    <div class="game-pills">
+      <div class="game-pill">🧠 Adivina</div>
+      <div class="game-pill">🔗 Conecta</div>
+      <div class="game-pill">🎁 Gana</div>
+    </div>
+    <button class="btn-primary" id="btn-start">Empezar <i class="ti ti-player-play"></i></button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen" id="screen-2">
+    <div class="step-header"><span class="step-eyebrow red">🔍 Adivina · Pon a prueba tu instinto</span></div>
+    <div class="scenario-card">
+      <span class="scenario-emoji" id="trivia-emoji">🌡️</span>
+      <p class="scenario-num" id="trivia-num">Situación 1 de 3</p>
+      <p class="scenario-text" id="trivia-q">Cargando...</p>
+    </div>
+    <div class="answers" id="trivia-answers"></div>
+    <div class="feedback-box" id="trivia-feedback">
+      <span class="feedback-emoji" id="trivia-fb-emoji">💡</span>
+      <div><strong id="trivia-fb-title">¡Correcto!</strong><span id="trivia-fb-text"></span></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen" id="screen-3">
+    <div class="step-header"><span class="step-eyebrow green">🔗 Conecta · Cada problema tiene su solución</span></div>
+    <div class="memo-instruction">
+      <span class="emoji">🧩</span>
+      <span>Empareja cada <strong>problema</strong> con la <strong>solución</strong> que lo resuelve.</span>
+    </div>
+    <div class="memo-stats">
+      <div class="memo-stat"><span>🔄</span> Intentos: <strong id="memo-attempts">0</strong></div>
+      <div class="memo-stat"><span>✅</span> Conexiones: <strong id="memo-found">0</strong>/4</div>
+    </div>
+    <div class="memo-grid" id="memo-grid"></div>
+    <div class="match-toast" id="match-toast"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="screen" id="screen-4">
+    <span class="impact-emoji">📈</span>
+    <p class="impact-num">+18%</p>
+    <p class="impact-headline">más producción. Real.</p>
+    <p class="impact-context">Es lo que lograron granjas que cuidaron cada punto que acabas de descubrir. No es magia: es prevención.</p>
+    <div class="curiosity-card">
+      <span class="emoji">🤔</span>
+      <p class="curiosity-text">Y esto es solo lo que cabe en un minuto. <strong>Imagina lo que AviPro puede hacer por tu granja completa.</strong></p>
+    </div>
+    <button class="btn-primary" id="btn-toreg">Quiero saber más <i class="ti ti-arrow-right"></i></button>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="screen" id="screen-5">
+    <span class="register-emoji">🎯</span>
+    <p class="register-title">Hagámoslo realidad</p>
+    <p class="register-sub">Un asesor de AviPro te lleva un diagnóstico gratis a tu granja esta semana.</p>
+    <div class="prize-banner">
+      <span class="emoji">🎁</span>
+      <p>Y entras al sorteo de un <strong>Kit AviPro completo</strong> (USD 500).</p>
+    </div>
+    <div class="form-group">
+      <label>¿Cómo te llamas?</label>
+      <input type="text" placeholder="Ej: María González" id="reg-nombre" readonly />
+    </div>
+    <div class="form-group">
+      <label>¿Cómo se llama tu granja o empresa?</label>
+      <input type="text" placeholder="Ej: Avícola El Roble" id="reg-empresa" readonly />
+    </div>
+    <button class="btn-primary" style="width:100%; max-width:380px;" id="btn-send"><i class="ti ti-send"></i> Enviar y participar</button>
+  </div>
+
+  <!-- THANKS -->
+  <div class="screen" id="screen-thanks">
+    <span class="thanks-emoji">🎉</span>
+    <p class="thanks-title" id="thanks-title">¡Listo!</p>
+    <p class="thanks-sub" id="thanks-sub">Ya estás participando. Nos vemos pronto en tu granja.</p>
+    <div class="final-score">
+      <span class="emoji">⚡</span>
+      <div><p class="final-score-num" id="final-points">0 pts</p><p class="final-score-label">Puntaje final</p></div>
+    </div>
+    <p class="replay-hint"><i class="ti ti-refresh"></i> El demo se reiniciará automáticamente...</p>
+  </div>
+</div>
+
+<script>
+const triviaQuestions = [
+  { emoji: "🌡️", q: "Entras al galpón y hace demasiado calor. ¿Qué les pasa a tus aves?",
+    answers: [{ emoji: "🍗", text: "Comen menos y crecen más lento" },{ emoji: "💪", text: "Crecen más rápido por el calor" },{ emoji: "😴", text: "No les afecta, se adaptan" }],
+    correct: 0, feedback: "El calor estresa a las aves: comen menos y el lote rinde menos. El ambiente lo es todo." },
+  { emoji: "💧", q: "El agua de los bebederos se ve turbia. ¿Qué tan grave es?",
+    answers: [{ emoji: "🤷", text: "Nada, no afecta" },{ emoji: "🦠", text: "Es la vía #1 de enfermedades" },{ emoji: "🎨", text: "Solo cambia el color" }],
+    correct: 1, feedback: "Los bebederos contaminados son la puerta de entrada más común de enfermedades." },
+  { emoji: "🐥", q: "Una sola ave se ve decaída en una esquina. ¿Qué haces?",
+    answers: [{ emoji: "👀", text: "Espero a ver si se recupera" },{ emoji: "⚡", text: "Actúo ya: una puede ser señal de muchas" }],
+    correct: 1, feedback: "Detectar a tiempo una ave enferma evita que se contagie todo el lote." }
+];
+
+const memoPairs = [
+  { pairId: "p1", emoji: "🦠", label: "Ave enferma" },{ pairId: "p1", emoji: "🛡️", label: "AviShield" },
+  { pairId: "p2", emoji: "💧", label: "Agua sucia" },{ pairId: "p2", emoji: "✨", label: "BioClean" },
+  { pairId: "p3", emoji: "🌡️", label: "Calor" },{ pairId: "p3", emoji: "🌱", label: "GrowMax" },
+  { pairId: "p4", emoji: "❓", label: "Duda salud" },{ pairId: "p4", emoji: "🔬", label: "AviTest" }
+];
+const matchMessages = {
+  p1: "🛡️ AviShield protege a tus aves antes de que enfermen.",
+  p2: "✨ BioClean mantiene el agua libre de patógenos.",
+  p3: "🌱 GrowMax fortalece a las aves frente al calor.",
+  p4: "🔬 AviTest detecta problemas antes de que se propaguen."
+};
+
+let state = { points: 0, paused: false, timers: [], memoCards: [], memoMatched: 0, memoAttempts: 0 };
+const stepLabels = { 1: "Bienvenida", 2: "Adivina", 3: "Conecta", 4: "Resultado", 5: "Diagnóstico", thanks: "Fin" };
+const stepProgress = { 1: 14, 2: 35, 3: 60, 4: 80, 5: 95, thanks: 100 };
+
+// Promise-based sleep that respects pause
+function wait(ms) {
+  return new Promise(resolve => {
+    const check = () => {
+      if (state.paused) { const t = setTimeout(check, 200); state.timers.push(t); }
+      else { const t = setTimeout(resolve, ms); state.timers.push(t); }
+    };
+    check();
+  });
+}
+
+function clearTimers() { state.timers.forEach(t => clearTimeout(t)); state.timers = []; }
+
+function showScreen(step) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + step).classList.add('active');
+  document.getElementById('progress-label').textContent = stepLabels[step];
+  document.getElementById('progress-fill').style.width = (stepProgress[step] || 100) + '%';
+}
+
+function updatePoints(add) { state.points += add; document.getElementById('points').textContent = state.points; }
+
+// Move cursor to element center, then click animation
+async function moveCursorTo(el) {
+  const cursor = document.getElementById('cursor');
+  const ripple = document.getElementById('ripple');
+  const app = document.getElementById('app');
+  const appRect = app.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  const x = r.left - appRect.left + r.width / 2;
+  const y = r.top - appRect.top + r.height / 2;
+  cursor.classList.add('visible');
+  cursor.style.left = (x - 4) + 'px';
+  cursor.style.top = (y - 2) + 'px';
+  await wait(750);
+}
+
+async function clickAnim() {
+  const cursor = document.getElementById('cursor');
+  const ripple = document.getElementById('ripple');
+  ripple.style.left = (parseFloat(cursor.style.left) + 4) + 'px';
+  ripple.style.top = (parseFloat(cursor.style.top) + 2) + 'px';
+  cursor.classList.add('clicking');
+  ripple.classList.remove('animate'); void ripple.offsetWidth; ripple.classList.add('animate');
+  await wait(200);
+  cursor.classList.remove('clicking');
+  await wait(150);
+}
+
+async function clickEl(el) { await moveCursorTo(el); await clickAnim(); }
+
+// ===== DEMO SEQUENCE =====
+async function runDemo() {
+  state = { points: 0, paused: false, timers: [], memoCards: [], memoMatched: 0, memoAttempts: 0 };
+  document.getElementById('points').textContent = '0';
+  showScreen(1);
+  await wait(2200);
+
+  // Click start
+  await clickEl(document.getElementById('btn-start'));
+  showScreen(2);
+  await wait(800);
+
+  // TRIVIA
+  for (let i = 0; i < triviaQuestions.length; i++) {
+    await renderTrivia(i);
+    await wait(1400);
+    await answerTriviaDemo(i);
+    await wait(2400);
+  }
+
+  // MEMORY
+  showScreen(3);
+  await wait(900);
+  await renderMemory();
+  await wait(700);
+  await playMemoryDemo();
+  await wait(1000);
+
+  // IMPACT
+  showScreen(4);
+  await wait(3200);
+  await clickEl(document.getElementById('btn-toreg'));
+
+  // REGISTER
+  showScreen(5);
+  await wait(900);
+  await typeInto(document.getElementById('reg-nombre'), 'María González');
+  await wait(500);
+  await typeInto(document.getElementById('reg-empresa'), 'Avícola El Roble');
+  await wait(700);
+  await clickEl(document.getElementById('btn-send'));
+  updatePoints(25);
+
+  // THANKS
+  document.getElementById('thanks-title').textContent = '¡Gracias, María! 🎉';
+  document.getElementById('thanks-sub').textContent = 'Ya estás participando en el sorteo. Un asesor de AviPro visitará Avícola El Roble esta semana.';
+  document.getElementById('final-points').textContent = state.points + ' pts';
+  document.getElementById('cursor').classList.remove('visible');
+  showScreen('thanks');
+  await wait(4500);
+
+  // Loop
+  if (!state.paused) restartDemo();
+}
+
+function renderTrivia(idx) {
+  const q = triviaQuestions[idx];
+  document.getElementById('trivia-emoji').textContent = q.emoji;
+  document.getElementById('trivia-num').textContent = `Situación ${idx + 1} de ${triviaQuestions.length}`;
+  document.getElementById('trivia-q').textContent = q.q;
+  document.getElementById('trivia-feedback').classList.remove('show', 'correct');
+  const container = document.getElementById('trivia-answers');
+  container.innerHTML = '';
+  q.answers.forEach((ans) => {
+    const b = document.createElement('button');
+    b.className = 'answer-btn';
+    b.innerHTML = `<span class="answer-emoji">${ans.emoji}</span><span>${ans.text}</span>`;
+    container.appendChild(b);
+  });
+  return Promise.resolve();
+}
+
+async function answerTriviaDemo(idx) {
+  const q = triviaQuestions[idx];
+  const btns = document.querySelectorAll('#trivia-answers .answer-btn');
+  await clickEl(btns[q.correct]);
+  btns[q.correct].classList.add('correct');
+  updatePoints(10);
+  const fb = document.getElementById('trivia-feedback');
+  fb.classList.add('show', 'correct');
+  document.getElementById('trivia-fb-emoji').textContent = '✅';
+  document.getElementById('trivia-fb-title').textContent = '¡Bien! +10 puntos';
+  document.getElementById('trivia-fb-text').textContent = q.feedback;
+}
+
+function renderMemory() {
+  state.memoMatched = 0; state.memoAttempts = 0;
+  // Fixed order for predictable demo (not shuffled so pairs are findable visually)
+  state.memoCards = [
+    memoPairs[0], memoPairs[2], memoPairs[1], memoPairs[4],
+    memoPairs[3], memoPairs[6], memoPairs[5], memoPairs[7]
+  ];
+  document.getElementById('memo-attempts').textContent = '0';
+  document.getElementById('memo-found').textContent = '0';
+  document.getElementById('match-toast').classList.remove('show');
+  const grid = document.getElementById('memo-grid');
+  grid.innerHTML = '';
+  state.memoCards.forEach((c) => {
+    const card = document.createElement('div');
+    card.className = 'memo-card';
+    card.innerHTML = `<div class="memo-front"><span class="emoji">❔</span></div><div class="memo-back"><span class="emoji">${c.emoji}</span><span>${c.label}</span></div>`;
+    grid.appendChild(card);
+  });
+  return Promise.resolve();
+}
+
+async function playMemoryDemo() {
+  const cards = document.querySelectorAll('#memo-grid .memo-card');
+  // Find index pairs by pairId
+  const pairOrder = ['p1', 'p2', 'p3', 'p4'];
+  for (const pid of pairOrder) {
+    const idxs = [];
+    state.memoCards.forEach((c, i) => { if (c.pairId === pid) idxs.push(i); });
+    // flip first
+    await clickEl(cards[idxs[0]]);
+    cards[idxs[0]].classList.add('flipped');
+    await wait(600);
+    // flip second
+    await clickEl(cards[idxs[1]]);
+    cards[idxs[1]].classList.add('flipped');
+    state.memoAttempts++;
+    document.getElementById('memo-attempts').textContent = state.memoAttempts;
+    await wait(700);
+    // match
+    cards[idxs[0]].classList.add('matched'); cards[idxs[1]].classList.add('matched');
+    state.memoMatched++;
+    document.getElementById('memo-found').textContent = state.memoMatched;
+    updatePoints(15);
+    const toast = document.getElementById('match-toast');
+    toast.textContent = matchMessages[pid];
+    toast.classList.add('show');
+    await wait(1600);
+    if (state.memoMatched < 4) toast.classList.remove('show');
+  }
+}
+
+async function typeInto(input, text) {
+  input.classList.add('typing');
+  await moveCursorTo(input);
+  await clickAnim();
+  for (let i = 0; i <= text.length; i++) {
+    input.value = text.slice(0, i);
+    await wait(70);
+  }
+}
+
+function togglePause() {
+  state.paused = !state.paused;
+  const btn = document.getElementById('pause-btn');
+  btn.innerHTML = state.paused ? '<i class="ti ti-player-play"></i> Reanudar' : '<i class="ti ti-player-pause"></i> Pausar';
+}
+
+function restartDemo() {
+  clearTimers();
+  state.paused = false;
+  document.getElementById('pause-btn').innerHTML = '<i class="ti ti-player-pause"></i> Pausar';
+  document.getElementById('cursor').classList.remove('visible');
+  runDemo();
+}
+
+// Auto-start
+setTimeout(runDemo, 600);
+</script>
